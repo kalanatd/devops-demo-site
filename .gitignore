@@ -2,6 +2,9 @@
 .env
 .env.*
 !.env.example
+# AWS console key downloads (e.g. <user>_credentials.csv, <user>_accessKeys.csv)
+*credentials*.csv
+*accessKeys*.csv
 
 # Node
 node_modules/
