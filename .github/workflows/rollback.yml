@@ -1,0 +1,48 @@
+# Manual rollback: redeploy any earlier commit, branch or tag without touching git history.
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit SHA, branch or tag to redeploy"
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    name: Redeploy ${{ inputs.ref }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Build the requested version
+        run: |
+          npm ci
+          GITHUB_SHA="$(git rev-parse HEAD)" npm run build
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Deploy
+        run: |
+          bucket="devops-demo-site-$(aws sts get-caller-identity --query Account --output text)"
+          aws s3 sync dist "s3://$bucket" --delete --cache-control "max-age=60"
+          echo "Redeployed $(git rev-parse --short HEAD) to http://$bucket.s3-website-${AWS_REGION}.amazonaws.com"

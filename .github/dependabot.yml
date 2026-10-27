@@ -1,0 +1,15 @@
+# Keeps GitHub Actions, npm packages and the Terraform provider up to date.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+  - package-ecosystem: terraform
+    directory: /infra
+    schedule:
+      interval: monthly
