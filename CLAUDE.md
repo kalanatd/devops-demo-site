@@ -22,12 +22,12 @@ The demo covers, in order: pipeline tour, tests, infra creation with Terraform, 
 
 - AWS auth: local scripts use the `ugdemo` profile. GitHub Actions use OIDC only (`vars.AWS_ROLE_ARN`). Never add AWS keys to the repo or to GitHub secrets.
 - Repo variables: `AWS_ROLE_ARN`, `TF_STATE_BUCKET`, `AWS_REGION`.
-- The IAM role trust allows only `repo:<repo>:pull_request`, `ref:refs/heads/main` and `environment:production`. Any new job that needs AWS must match one of these.
+- The IAM role trust allows only `<prefix>:pull_request`, `<prefix>:ref:refs/heads/main` and `<prefix>:environment:production`. `<prefix>` is GitHub's immutable subject prefix (`repo:owner@<id>/repo@<id>`), read by `bootstrap-aws.sh` from the GitHub API, so the repo must exist before bootstrap. Any new job that needs AWS must match one of these.
 - Required status check names must match job names: "Lint, test & build" and "Terraform plan". Rename them in the ruleset too if you change them.
 - Terraform version is pinned to 1.12.2 in the workflows.
 - Before committing, run: `npm run lint && npm test`, `terraform fmt -check -recursive` in infra/, `shellcheck -x scripts/*.sh`, `actionlint`.
 
 ## Status
 
-- Not yet run against real AWS or GitHub. First step: `aws sts get-caller-identity --profile ugdemo`, then `scripts/setup.sh kalanatd/devops-demo-site`.
+- Live: repo kalanatd/devops-demo-site (public), AWS account 189416355051 (ap-southeast-2), first deploy green on 2026-10-27.
 - Known follow-ups (not done, on purpose): CloudFront for HTTPS, a separate read-only role for PR plans, a staging environment.

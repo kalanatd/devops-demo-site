@@ -97,7 +97,7 @@ Show both checks running, the **Terraform plan comment** ("No changes", because 
 
 | Symptom | Fix |
 |---|---|
-| `Could not assume role with OIDC` | Check that the repo variables `AWS_ROLE_ARN`, `AWS_REGION` and `TF_STATE_BUCKET` exist and that the repo name matches the one given to `setup.sh`. |
+| `Could not assume role with OIDC` | Check that the repo variables `AWS_ROLE_ARN`, `AWS_REGION` and `TF_STATE_BUCKET` exist. GitHub puts the repo's numeric IDs in the token, so if the repo was renamed or re-created, re-run `scripts/bootstrap-aws.sh owner/repo` to refresh the role's trust. |
 | Bucket policy `AccessDenied` / public access blocked | The account-level **S3 Block Public Access** is on. Turn off "Block public access ... bucket policies" for the account in the S3 console, or host behind CloudFront instead. |
 | Health check fails right after the first deploy | S3 website endpoints can take a minute to start answering. Re-run the job. |
 | `Error acquiring the state lock` | A previous run was cancelled mid-apply. Wait, or run `terraform force-unlock <id>` locally. |
