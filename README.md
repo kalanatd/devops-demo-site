@@ -28,11 +28,11 @@ flowchart LR
 | `.github/workflows/rollback.yml` | Manual: redeploy any earlier commit |
 | `.github/workflows/destroy.yml` | Manual: delete the website bucket after the demo |
 | `scripts/setup.sh` | One-time setup from your laptop: AWS bootstrap, repo, variables, branch protection |
-| `scripts/aws-profile.sh` | Picks the `demo` AWS profile and asks you to confirm the account |
+| `scripts/aws-profile.sh` | Picks the `ugdemo` AWS profile and asks you to confirm the account |
 
 ## How AWS access works (no keys in GitHub)
 
-`scripts/bootstrap-aws.sh` runs once on your laptop using your **`demo` AWS CLI profile**. It creates:
+`scripts/bootstrap-aws.sh` runs once on your laptop using your **`ugdemo` AWS CLI profile**. It creates:
 
 - an S3 bucket for Terraform state, with versioning, encryption and locking
 - GitHub's OIDC identity provider
@@ -44,9 +44,9 @@ After that, every workflow run gets a **short-lived token** (about one hour) fro
 
 Prerequisites on your Mac: `brew install gh awscli`, then `gh auth login`.
 
-1. Check the `demo` profile points at the demo account:
+1. Check the `ugdemo` profile points at the demo account:
    ```bash
-   aws sts get-caller-identity --profile demo
+   aws sts get-caller-identity --profile ugdemo
    ```
    The profile needs permission to create S3 buckets and IAM roles (for example `AdministratorAccess` on an IAM user, not root keys). If it has no default region, setup uses `us-east-1`.
 2. Run setup:
@@ -90,8 +90,8 @@ Show both checks running, the **Terraform plan comment** ("No changes", because 
 ## After the demo
 
 1. Actions → **Destroy** → type `destroy`. This deletes the website bucket.
-2. `scripts/teardown-aws.sh` (uses the `demo` profile), which removes the deploy role and the state bucket.
-3. Delete the IAM user or access key behind the `demo` profile if you no longer need it.
+2. `scripts/teardown-aws.sh` (uses the `ugdemo` profile), which removes the deploy role and the state bucket.
+3. Delete the IAM user or access key behind the `ugdemo` profile if you no longer need it.
 
 ## Troubleshooting
 

@@ -2,7 +2,7 @@
 # Removes what bootstrap-aws.sh created. Run the "Destroy" workflow FIRST
 # so Terraform deletes the website bucket while its state still exists.
 #
-# Usage: scripts/teardown-aws.sh   (uses the "demo" AWS CLI profile; override with AWS_PROFILE)
+# Usage: scripts/teardown-aws.sh   (uses the "ugdemo" AWS CLI profile; override with AWS_PROFILE)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

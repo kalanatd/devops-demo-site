@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-time AWS setup, run from your own machine with the "demo" AWS CLI profile.
+# One-time AWS setup, run from your own machine with the "ugdemo" AWS CLI profile.
 # Creates:
 #   1. An S3 bucket for Terraform state (versioned, encrypted, private)
 #   2. GitHub's OIDC identity provider, so Actions can get short-lived AWS tokens

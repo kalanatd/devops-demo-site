@@ -1,11 +1,11 @@
 # shellcheck shell=bash
-# Sourced by the other scripts. Selects the AWS CLI profile (default: "demo"),
+# Sourced by the other scripts. Selects the AWS CLI profile (default: "ugdemo"),
 # resolves the region, and asks you to confirm the account before changing anything.
 #
 # Override with:  AWS_PROFILE=other-profile AWS_REGION=ap-south-1 scripts/setup.sh
 # Skip the prompt: YES=1 scripts/setup.sh
 
-export AWS_PROFILE="${AWS_PROFILE:-demo}"
+export AWS_PROFILE="${AWS_PROFILE:-ugdemo}"
 
 # Stray keys in the shell would silently override the profile, so drop them.
 unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN

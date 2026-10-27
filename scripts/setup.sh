@@ -3,7 +3,7 @@
 #   AWS bootstrap -> create GitHub repo -> repo variables -> production environment
 #   -> first push (triggers the first deploy) -> protect main with a ruleset
 #
-# Prerequisites: git, GitHub CLI (gh auth login), AWS CLI v2 with a "demo" profile.
+# Prerequisites: git, GitHub CLI (gh auth login), AWS CLI v2 with a "ugdemo" profile.
 # Your AWS credentials stay on this machine. GitHub only ever gets short-lived OIDC tokens.
 #
 # Usage: scripts/setup.sh [owner/repo]        (default: kalanatd/devops-demo-site)
@@ -33,7 +33,19 @@ else
   gh repo create "$REPO" --public \
     --description "Static website on Amazon S3, deployed with Terraform and GitHub Actions"
 fi
-git remote get-url origin >/dev/null 2>&1 || git remote add origin "https://github.com/${REPO}.git"
+git remote get-url origin >/dev/null 2>&1 || git remote add origin "git@github.com:${REPO}.git"
+
+# Security basics for a public repo:
+#   - secret scanning + push protection: GitHub rejects pushes that contain keys
+#   - workflows get a read-only GITHUB_TOKEN unless a job asks for more
+#   - workflows from outside contributors' forks only run after you approve them
+gh api --method PATCH "repos/${REPO}" --silent \
+  -f "security_and_analysis[secret_scanning][status]=enabled" \
+  -f "security_and_analysis[secret_scanning_push_protection][status]=enabled"
+gh api --method PUT "repos/${REPO}/actions/permissions/workflow" --silent \
+  -f default_workflow_permissions=read -F can_approve_pull_request_reviews=false
+gh api --method PUT "repos/${REPO}/actions/permissions/fork-pr-contributor-approval" --silent \
+  -f approval_policy=all_external_contributors
 
 echo "==> 3/5 Setting repository variables (not secrets: none of these are sensitive)"
 gh variable set AWS_ROLE_ARN --repo "$REPO" --body "$AWS_ROLE_ARN"
