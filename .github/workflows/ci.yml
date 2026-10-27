@@ -41,7 +41,7 @@ jobs:
       - name: Build
         run: npm run build
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: site
           path: dist/
@@ -66,7 +66,7 @@ jobs:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
@@ -85,11 +85,11 @@ jobs:
       - name: Terraform plan
         id: plan
         run: |
-          terraform plan -input=false -no-color -var="aws_region=${{ vars.AWS_REGION }}" -out=tfplan
+          terraform plan -input=false -lock-timeout=5m -no-color -var="aws_region=${{ vars.AWS_REGION }}" -out=tfplan
           terraform show -no-color tfplan > plan.txt
 
       - name: Post plan to the PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
