@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sets up the whole demo from your own machine in one go:
-#   AWS bootstrap -> create GitHub repo -> repo variables -> production environment
+#   create GitHub repo -> AWS bootstrap -> repo variables -> production environment
 #   -> first push (triggers the first deploy) -> protect main with a ruleset
 #
 # Prerequisites: git, GitHub CLI (gh auth login), AWS CLI v2 with a "ugdemo" profile.
@@ -21,12 +21,7 @@ gh auth status >/dev/null 2>&1 || { echo "Run 'gh auth login' first."; exit 1; }
 # shellcheck source=scripts/aws-profile.sh
 source scripts/aws-profile.sh
 
-echo "==> 1/5 Bootstrapping AWS (state bucket, OIDC provider, deploy role)"
-OUTPUT="$(scripts/bootstrap-aws.sh "$REPO")"
-AWS_ROLE_ARN="$(sed -n 's/^AWS_ROLE_ARN=//p' <<<"$OUTPUT")"
-TF_STATE_BUCKET="$(sed -n 's/^TF_STATE_BUCKET=//p' <<<"$OUTPUT")"
-
-echo "==> 2/5 Creating GitHub repo ${REPO}"
+echo "==> 1/5 Creating GitHub repo ${REPO}"
 if gh repo view "$REPO" >/dev/null 2>&1; then
   echo "    Repo already exists, reusing it"
 else
@@ -46,6 +41,11 @@ gh api --method PUT "repos/${REPO}/actions/permissions/workflow" --silent \
   -f default_workflow_permissions=read -F can_approve_pull_request_reviews=false
 gh api --method PUT "repos/${REPO}/actions/permissions/fork-pr-contributor-approval" --silent \
   -f approval_policy=all_external_contributors
+
+echo "==> 2/5 Bootstrapping AWS (state bucket, OIDC provider, deploy role trusted by this repo)"
+OUTPUT="$(scripts/bootstrap-aws.sh "$REPO")"
+AWS_ROLE_ARN="$(sed -n 's/^AWS_ROLE_ARN=//p' <<<"$OUTPUT")"
+TF_STATE_BUCKET="$(sed -n 's/^TF_STATE_BUCKET=//p' <<<"$OUTPUT")"
 
 echo "==> 3/5 Setting repository variables (not secrets: none of these are sensitive)"
 gh variable set AWS_ROLE_ARN --repo "$REPO" --body "$AWS_ROLE_ARN"
