@@ -63,6 +63,11 @@ fi
 # --- 3. IAM role for GitHub Actions -------------------------------------------
 # Only these GitHub contexts can assume the role:
 #   pull requests, pushes to main, and jobs in the "production" environment.
+# GitHub puts the repo's numeric IDs in the token (e.g. repo:owner@123/name@456),
+# so a deleted-and-recreated repo with the same name can't use this role.
+# Ask GitHub for this repo's exact prefix (the repo must already exist).
+SUB="$(gh api "repos/${REPO}/actions/oidc/customization/sub" --jq .sub_claim_prefix)"
+log "GitHub OIDC subject prefix: ${SUB}"
 TRUST_POLICY="$(cat <<JSON
 {
   "Version": "2012-10-17",
@@ -71,12 +76,12 @@ TRUST_POLICY="$(cat <<JSON
     "Principal": { "Federated": "${OIDC_ARN}" },
     "Action": "sts:AssumeRoleWithWebIdentity",
     "Condition": {
-      "StringEquals": { "${OIDC_URL}:aud": "sts.amazonaws.com" },
-      "StringLike": {
+      "StringEquals": {
+        "${OIDC_URL}:aud": "sts.amazonaws.com",
         "${OIDC_URL}:sub": [
-          "repo:${REPO}:pull_request",
-          "repo:${REPO}:ref:refs/heads/main",
-          "repo:${REPO}:environment:production"
+          "${SUB}:pull_request",
+          "${SUB}:ref:refs/heads/main",
+          "${SUB}:environment:production"
         ]
       }
     }
