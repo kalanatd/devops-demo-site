@@ -3,10 +3,11 @@
 #   AWS bootstrap -> create GitHub repo -> repo variables -> production environment
 #   -> first push (triggers the first deploy) -> protect main with a ruleset
 #
-# Prerequisites: git, GitHub CLI (gh auth login), AWS CLI v2, and a .env file.
-# Your AWS keys stay on this machine. GitHub only ever gets short-lived OIDC tokens.
+# Prerequisites: git, GitHub CLI (gh auth login), AWS CLI v2 with a "demo" profile.
+# Your AWS credentials stay on this machine. GitHub only ever gets short-lived OIDC tokens.
 #
 # Usage: scripts/setup.sh [owner/repo]        (default: kalanatd/devops-demo-site)
+#        AWS_PROFILE=other scripts/setup.sh   (use a different AWS CLI profile)
 set -euo pipefail
 
 REPO="${1:-kalanatd/devops-demo-site}"
@@ -16,13 +17,9 @@ for cmd in git gh aws; do
   command -v "$cmd" >/dev/null || { echo "Missing '$cmd'. Install it first (see README)."; exit 1; }
 done
 gh auth status >/dev/null 2>&1 || { echo "Run 'gh auth login' first."; exit 1; }
-[ -f .env ] || { echo "Create .env from .env.example first."; exit 1; }
 
-set -a
-# shellcheck disable=SC1091
-source .env
-set +a
-export AWS_REGION="${AWS_REGION:-us-east-1}"
+# shellcheck source=scripts/aws-profile.sh
+source scripts/aws-profile.sh
 
 echo "==> 1/5 Bootstrapping AWS (state bucket, OIDC provider, deploy role)"
 OUTPUT="$(scripts/bootstrap-aws.sh "$REPO")"
@@ -79,5 +76,4 @@ echo
 echo "All set. Watch the first deploy:  gh run watch --repo ${REPO}"
 echo "Actions tab:                      https://github.com/${REPO}/actions"
 echo
-echo "After the demo: delete the AWS access key you put in .env (IAM console),"
-echo "or run the Destroy workflow and scripts/teardown-aws.sh to remove everything."
+echo "After the demo: run the Destroy workflow, then scripts/teardown-aws.sh to remove everything."

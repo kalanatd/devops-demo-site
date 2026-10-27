@@ -28,33 +28,34 @@ flowchart LR
 | `.github/workflows/rollback.yml` | Manual: redeploy any earlier commit |
 | `.github/workflows/destroy.yml` | Manual: delete the website bucket after the demo |
 | `scripts/setup.sh` | One-time setup from your laptop: AWS bootstrap, repo, variables, branch protection |
+| `scripts/aws-profile.sh` | Picks the `demo` AWS profile and asks you to confirm the account |
 
 ## How AWS access works (no keys in GitHub)
 
-`scripts/bootstrap-aws.sh` runs once on your laptop with an access key from `.env`. It creates:
+`scripts/bootstrap-aws.sh` runs once on your laptop using your **`demo` AWS CLI profile**. It creates:
 
 - an S3 bucket for Terraform state, with versioning, encryption and locking
 - GitHub's OIDC identity provider
 - an IAM role that **only this repo** can assume, and only from pull requests, `main`, or the `production` environment. The role can only touch the website bucket and the state bucket.
 
-After that, every workflow run gets a **short-lived token** (about one hour) from AWS. No AWS keys are stored in GitHub. Delete the access key from `.env` once setup is done.
+After that, every workflow run gets a **short-lived token** (about one hour) from AWS. No AWS keys are stored in GitHub, and your profile's credentials never leave your machine.
 
 ## Setup (about 5 minutes)
 
 Prerequisites on your Mac: `brew install gh awscli`, then `gh auth login`.
 
-1. In the new AWS account, create an IAM user (for example `demo-admin`) with the `AdministratorAccess` policy, then create an access key for it. Don't use root account keys.
-2. Copy the example file and paste in the key:
+1. Check the `demo` profile points at the demo account:
    ```bash
-   cp .env.example .env    # then edit .env
+   aws sts get-caller-identity --profile demo
    ```
-3. Run setup:
+   The profile needs permission to create S3 buckets and IAM roles (for example `AdministratorAccess` on an IAM user, not root keys). If it has no default region, setup uses `us-east-1`.
+2. Run setup:
    ```bash
    scripts/setup.sh kalanatd/devops-demo-site
    ```
-   It bootstraps AWS, creates the repo, sets the variables, pushes `main` (this starts the first deploy) and protects `main`, so changes need a pull request with green checks.
-4. Watch the first deploy: `gh run watch`. The website URL appears on the **production** environment in the run summary.
-5. Delete the access key in the IAM console. The pipeline doesn't need it.
+   It shows the account and region and asks you to confirm, then bootstraps AWS, creates the repo, sets the variables, pushes `main` (this starts the first deploy) and protects `main`, so changes need a pull request with green checks.
+   To use another profile or region: `AWS_PROFILE=other AWS_REGION=ap-south-1 scripts/setup.sh`.
+3. Watch the first deploy: `gh run watch`. The website URL appears on the **production** environment in the run summary.
 
 ## Demo script
 
@@ -89,8 +90,8 @@ Show both checks running, the **Terraform plan comment** ("No changes", because 
 ## After the demo
 
 1. Actions → **Destroy** → type `destroy`. This deletes the website bucket.
-2. `scripts/teardown-aws.sh`, which removes the deploy role and the state bucket.
-3. Delete the IAM user or its access key.
+2. `scripts/teardown-aws.sh` (uses the `demo` profile), which removes the deploy role and the state bucket.
+3. Delete the IAM user or access key behind the `demo` profile if you no longer need it.
 
 ## Troubleshooting
 

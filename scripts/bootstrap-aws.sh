@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-time AWS setup, run from your own machine with the keys in .env.
+# One-time AWS setup, run from your own machine with the "demo" AWS CLI profile.
 # Creates:
 #   1. An S3 bucket for Terraform state (versioned, encrypted, private)
 #   2. GitHub's OIDC identity provider, so Actions can get short-lived AWS tokens
@@ -12,7 +12,11 @@
 set -euo pipefail
 
 REPO="${1:?usage: $0 <github-owner>/<repo>}"
-REGION="${AWS_REGION:-us-east-1}"
+
+# Profile selection + account confirmation (skipped if setup.sh already confirmed).
+# shellcheck source=scripts/aws-profile.sh
+source "$(dirname "$0")/aws-profile.sh" >&2
+REGION="$AWS_REGION"
 PROJECT="devops-demo-site"
 ROLE_NAME="${PROJECT}-github-actions"
 OIDC_URL="token.actions.githubusercontent.com"

@@ -2,14 +2,12 @@
 # Removes what bootstrap-aws.sh created. Run the "Destroy" workflow FIRST
 # so Terraform deletes the website bucket while its state still exists.
 #
-# Usage: scripts/teardown-aws.sh   (reads AWS keys from .env)
+# Usage: scripts/teardown-aws.sh   (uses the "demo" AWS CLI profile; override with AWS_PROFILE)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-set -a
-# shellcheck disable=SC1091
-source .env
-set +a
+# shellcheck source=scripts/aws-profile.sh
+source scripts/aws-profile.sh
 
 PROJECT="devops-demo-site"
 ROLE_NAME="${PROJECT}-github-actions"
@@ -39,4 +37,4 @@ PY
 aws s3api delete-bucket --bucket "$STATE_BUCKET" 2>/dev/null || true
 
 echo "Removed. The GitHub OIDC provider was left in place (shared, free); delete it in IAM if you like."
-echo "Finally, delete the access key you used in .env from the IAM console."
+echo "Finally, delete the IAM user or access key behind the '${AWS_PROFILE}' profile if you no longer need it."
