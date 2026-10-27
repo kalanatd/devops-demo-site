@@ -77,7 +77,7 @@ jobs:
           -backend-config="region=${{ vars.AWS_REGION }}"
 
       - name: Terraform apply
-        run: terraform apply -input=false -auto-approve -var="aws_region=${{ vars.AWS_REGION }}"
+        run: terraform apply -input=false -lock-timeout=5m -auto-approve -var="aws_region=${{ vars.AWS_REGION }}"
 
       - name: Read outputs
         id: out

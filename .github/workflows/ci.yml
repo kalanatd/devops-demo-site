@@ -85,7 +85,7 @@ jobs:
       - name: Terraform plan
         id: plan
         run: |
-          terraform plan -input=false -no-color -var="aws_region=${{ vars.AWS_REGION }}" -out=tfplan
+          terraform plan -input=false -lock-timeout=5m -no-color -var="aws_region=${{ vars.AWS_REGION }}" -out=tfplan
           terraform show -no-color tfplan > plan.txt
 
       - name: Post plan to the PR
